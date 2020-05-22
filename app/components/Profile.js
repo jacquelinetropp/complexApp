@@ -1,5 +1,5 @@
 import React, { useEffect, useContext, useState } from "react";
-import { useParams } from "react-router-dom";
+import { autoComplete, useParams } from "react-router-dom";
 
 import Axios from "axios";
 import StateContext from "../StateContext";
@@ -21,18 +21,27 @@ const Profile = (props) => {
   });
 
   const { username } = useParams();
+
   useEffect(() => {
+    const ourRequest = Axios.CancelToken.source();
     async function fetchData() {
       try {
-        const response = await Axios.post(`/profile/${username}`, {
-          token: appSate.user.token,
-        });
+        const response = await Axios.post(
+          `/profile/${username}`,
+          {
+            token: appSate.user.token,
+          },
+          { cancelToken: ourRequest.token }
+        );
         setProfileData(response.data);
       } catch (e) {
         console.log("there was a problem");
       }
     }
     fetchData();
+    return () => {
+      ourRequest.cancel();
+    };
   }, []);
   return (
     <Page title="Profile">

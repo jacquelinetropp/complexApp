@@ -12,6 +12,9 @@ import CreatePost from "./components/CreatePost";
 import ViewSinglePost from "./components/ViewSinglePost";
 import FlashMessages from "./components/FlashMessages";
 import Profile from "./components/Profile";
+import EditPost from "./components/EditPost";
+import NotFound from "./components/NotFound";
+import Search from "./components/Search";
 
 import StateContext from "./StateContext";
 import DispatchContext from "./DispatchContext";
@@ -30,6 +33,7 @@ function Main() {
       username: localStorage.getItem("complexappUsername"),
       avatar: localStorage.getItem("complexappAvatar"),
     },
+    isSearchOpen: false,
   };
   function ourReducer(draft, action) {
     switch (action.type) {
@@ -42,6 +46,13 @@ function Main() {
         return;
       case "flashMessage":
         draft.flashMessages.push(action.value);
+        return;
+      case "openSearch":
+        draft.isSearchOpen = true;
+        return;
+
+      case "closeSearch":
+        draft.isSearchOpen = false;
         return;
     }
   }
@@ -70,14 +81,17 @@ function Main() {
             <Route exact path="/">
               {state.loggedIn ? <Home /> : <HomeGuest />}
             </Route>
-            <Route path="/post/:id" component={ViewSinglePost} />
+            <Route exact path="/post/:id" component={ViewSinglePost} />
+            <Route exact path="/post/:id/edit" component={EditPost} />
             <Route path="/create-post">
               <CreatePost />
             </Route>
             <Route path="/about-us" component={About} />
             <Route path="/terms" component={Terms} />
             <Route path="/profile/:username" component={Profile} />
+            <Route component={NotFound}></Route>
           </Switch>
+          {state.isSearchOpen ? <Search /> : ""}
           <Footer />
         </BrowserRouter>
       </DispatchContext.Provider>
