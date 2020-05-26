@@ -2,6 +2,7 @@ import React, { useState, useReducer, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { useImmerReducer } from "use-immer";
 import { BrowserRouter, Switch, Route } from "react-router-dom";
+import { CSSTransition } from "react-transition-group";
 import Axios from "axios";
 
 import Header from "./components/Header";
@@ -15,6 +16,7 @@ import Profile from "./components/Profile";
 import EditPost from "./components/EditPost";
 import NotFound from "./components/NotFound";
 import Search from "./components/Search";
+import Chat from "./components/Chat";
 
 import StateContext from "./StateContext";
 import DispatchContext from "./DispatchContext";
@@ -34,6 +36,8 @@ function Main() {
       avatar: localStorage.getItem("complexappAvatar"),
     },
     isSearchOpen: false,
+    isChatOpen: false,
+    unreadChatCount: 0,
   };
   function ourReducer(draft, action) {
     switch (action.type) {
@@ -54,6 +58,18 @@ function Main() {
       case "closeSearch":
         draft.isSearchOpen = false;
         return;
+      case "toggleChat":
+        draft.isChatOpen = !draft.isChatOpen;
+        return;
+      case "closeChat":
+        draft.isChatOpen = false;
+        return;
+      case "incrementUnreadChatCount":
+        draft.unreadChatCount++;
+        return;
+      case "clearUnreadChatCount":
+        draft.unreadChatCount = 0;
+        return;
     }
   }
 
@@ -70,6 +86,37 @@ function Main() {
       localStorage.removeItem("complexappAvatar");
     }
   }, [state.loggedIn]);
+
+  //Check if token has expired or not on first render
+  useEffect(() => {
+    if (state.loggedIn) {
+      const ourRequest = Axios.CancelToken.source();
+      async function fetchResults() {
+        try {
+          const response = await Axios.post(
+            "/checkToken",
+            {
+              token: state.user.token,
+            },
+            {
+              cancelToken: ourRequest.token,
+            }
+          );
+          if (!response.data) {
+            dispatch({ type: "logout" });
+            dispatch({
+              type: "flashMessage",
+              value: "Your session has expired. Please log in again.",
+            });
+          }
+        } catch (e) {
+          console.log("There was an error ");
+        }
+      }
+      fetchResults();
+      return () => ourRequest.cancel();
+    }
+  }, []);
 
   return (
     <StateContext.Provider value={state}>
@@ -91,7 +138,15 @@ function Main() {
             <Route path="/profile/:username" component={Profile} />
             <Route component={NotFound}></Route>
           </Switch>
-          {state.isSearchOpen ? <Search /> : ""}
+          <CSSTransition
+            timeout={330}
+            in={state.isSearchOpen}
+            classNames="search-overlay"
+            unmountOnExit
+          >
+            <Search />
+          </CSSTransition>
+          <Chat />
           <Footer />
         </BrowserRouter>
       </DispatchContext.Provider>
