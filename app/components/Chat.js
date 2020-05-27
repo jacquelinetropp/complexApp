@@ -4,9 +4,9 @@ import DispatchContext from "../DispatchContext";
 import { useImmer } from "use-immer";
 import io from "socket.io-client";
 import { Link } from "react-router-dom";
-const socket = io("http://localhost:8080");
 
 const Chat = (props) => {
+  const socket = useRef(null);
   const chatField = useRef(null);
   const chatLog = useRef(null);
   const appState = useContext(StateContext);
@@ -23,10 +23,35 @@ const Chat = (props) => {
     });
   }
 
+  useEffect(() => {
+    if (appState.isChatOpen) {
+      chatField.current.focus();
+      appDispatch({ type: "clearUnreadChatCount" });
+    }
+  }, [appState.isChatOpen]);
+
+  useEffect(() => {
+    socket.current = io("http://localhost:8080");
+
+    socket.curren.on("chatFromServer", (message) => {
+      setState((draft) => {
+        draft.chatMessages.push(message);
+      });
+    });
+    return () => socket.current.disconnect();
+  }, []);
+
+  useEffect(() => {
+    chatLog.current.scrollTop = chatLog.current.scrollHeight;
+    if (state.chatMessages.length && !appState.isChatOpen) {
+      appDispatch({ type: "incrementUnreadChatCount" });
+    }
+  }, [state.chatMessages]);
+
   function handleSubmit(e) {
     e.preventDefault();
     //Send message to chat server
-    socket.emit("chatFromBrowser", {
+    socket.current.emit("chatFromBrowser", {
       message: state.fieldValue,
       token: appState.user.token,
     });
@@ -40,28 +65,6 @@ const Chat = (props) => {
       draft.fieldValue = "";
     });
   }
-
-  useEffect(() => {
-    if (appState.isChatOpen) {
-      chatField.current.focus();
-      appDispatch({ type: "clearUnreadChatCount" });
-    }
-  }, [appState.isChatOpen]);
-
-  useEffect(() => {
-    socket.on("chatFromServer", (message) => {
-      setState((draft) => {
-        draft.chatMessages.push(message);
-      });
-    });
-  }, []);
-
-  useEffect(() => {
-    chatLog.current.scrollTop = chatLog.current.scrollHeight;
-    if (state.chatMessages.length && !appState.isChatOpen) {
-      appDispatch({ type: "incrementUnreadChatCount" });
-    }
-  }, [state.chatMessages]);
 
   return (
     <div
