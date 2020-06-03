@@ -31,14 +31,17 @@ const Chat = (props) => {
   }, [appState.isChatOpen]);
 
   useEffect(() => {
-    socket.current = io("http://localhost:8080");
+    socket.current = io();
 
-    socket.curren.on("chatFromServer", (message) => {
+    socket.current.on("chatFromServer", (message) => {
       setState((draft) => {
         draft.chatMessages.push(message);
       });
     });
-    return () => socket.current.disconnect();
+    return () =>
+      socket.current.disconnect(
+        process.env.BACKENDURL || "https://complexapptutorial.herokuapp.com"
+      );
   }, []);
 
   useEffect(() => {

@@ -56,13 +56,13 @@ function EditPost(props) {
         draft.isSaving = false;
         return;
       case "titleRules":
-        if (!action.value) {
+        if (!action.value.trim()) {
           draft.title.hasErrors = true;
           draft.title.message = "You must provide a title.";
         }
         return;
       case "bodyRules":
-        if (!action.value) {
+        if (!action.value.trim()) {
           draft.body.hasErrors = true;
           draft.body.message = "You must provide body content.";
         }
@@ -76,8 +76,8 @@ function EditPost(props) {
 
   function submitHandler(e) {
     e.preventDefault();
-    dispatch({ type: "titleRules", values: state.title.value });
-    dispatch({ type: "bodyRules", values: state.body.value });
+    dispatch({ type: "titleRules", value: state.title.value });
+    dispatch({ type: "bodyRules", value: state.body.value });
     dispatch({ type: "submitRequest" });
   }
 

@@ -26,7 +26,8 @@ import About from "./components/About";
 import Terms from "./components/Terms";
 import LoadingIcon from "./components/LoadingIcon";
 
-Axios.defaults.baseURL = "http://localhost:8080";
+Axios.defaults.baseURL =
+  process.env.BACKENDURL || "https://complexapptutorial.herokuapp.com";
 
 function Main() {
   const initialState = {
